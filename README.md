@@ -1,6 +1,6 @@
 Micropython code for GM12864-59N screen with ST7567S chip. Tested with Raspberry Pi Pico.
 
-Pi Pico|Screen
+Pi Pico | Screen
 
 GP27 -> SCL
 
