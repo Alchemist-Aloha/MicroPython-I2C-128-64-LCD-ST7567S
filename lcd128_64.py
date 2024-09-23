@@ -6,9 +6,9 @@ lcd.Display() Only 94 limited characters in fonts can be displayed
 
 import machine
 import time
-import lcd128_32_fonts
+import lcd128_64_fonts
 cursor = [0, 0]
-class lcd128_32:
+class lcd128_64:
     
     def __init__(self,dt,clk,bus,addr):
         self.addr = addr
@@ -29,51 +29,53 @@ class lcd128_32:
     def Init(self):
         #self.i2c.start()
         time.sleep(0.01)
-        self.WriteByte_command(0xe2)
+        self.WriteByte_command(0xe2)    # system reset
         time.sleep(0.01)
-        self.WriteByte_command(0xa3)
-        self.WriteByte_command(0xa0)
-        self.WriteByte_command(0xc8)
-        self.WriteByte_command(0x22)
-        self.WriteByte_command(0x81)
-        self.WriteByte_command(0x30)
-        self.WriteByte_command(0x2c)
-        self.WriteByte_command(0x2e)
-        self.WriteByte_command(0x2f)
+        self.WriteByte_command(0xa2)    # 1/9 bias
+        self.WriteByte_command(0xa0)    # Set SEG direction, normal
+        self.WriteByte_command(0xc8)    # Set COM direction, normal
+        self.WriteByte_command(0x25)    # Select internal VDD regulator
+        self.WriteByte_command(0x81)    # Set electronic volume (EV) level
+        self.WriteByte_command(0x20)    # Set electronic volume (EV) level
+        self.WriteByte_command(0x2c)    # Booster on
+        self.WriteByte_command(0x2e)    # regulator on
+        self.WriteByte_command(0x2f)    # Follower on
         self.Clear()
-        self.WriteByte_command(0xff)
-        self.WriteByte_command(0x72)
-        self.WriteByte_command(0xfe)
-        self.WriteByte_command(0xd6)
-        self.WriteByte_command(0x90)
-        self.WriteByte_command(0x9d)
-        self.WriteByte_command(0xaf)
-        self.WriteByte_command(0x40)
-    
+        # self.WriteByte_command(0xff)    # 11111111
+        # self.WriteByte_command(0x72)    # 01110010
+        # self.WriteByte_command(0xfe)    # 11111110
+        # self.WriteByte_command(0xd6)    # 11010110 orig=d6
+        # self.WriteByte_command(0x90)    # 10010000
+        # self.WriteByte_command(0x9d)    # 10011101
+        self.WriteByte_command(0xaf)    # Display on
+        self.WriteByte_command(0x40)    # Set start line
+        
     def Clear(self):
-        for i in range(4):
-            self.WriteByte_command(0xb0 + i)
-            self.WriteByte_command(0x10)
-            self.WriteByte_command(0x00)
+        '''Clear the screen'''
+        for i in range(8):
+            self.WriteByte_command(0xb0 + i)    # set page address
+            self.WriteByte_command(0x10)    # set column address MSB
+            self.WriteByte_command(0x00)    # set column address LSB
             for j in range(128):
-                self.WriteByte_dat(0x00)
+                self.WriteByte_dat(0x00)    # clear all columns
     
     def Cursor(self, y, x):
+        '''Set the cursor position. y: 0-7, x: 0-17'''
         if x > 17:
             x = 17
-        if y > 3:
-            x = 3
+        if y > 7:
+            y = 7
         cursor[0] = y
         cursor[1] = x
         
     def WriteFont(self, num):
-        for item in lcd128_32_fonts.textFont[num]:
+        for item in lcd128_64_fonts.textFont[num]:
             self.WriteByte_dat(item)
     
     def Display(self, str):
-        self.WriteByte_command(0xb0 + cursor[0])
-        self.WriteByte_command(0x10 + cursor[1] * 7 // 16)
-        self.WriteByte_command(0x00 + cursor[1] * 7 % 16)
+        self.WriteByte_command(0xb0 + cursor[0])    # set page address
+        self.WriteByte_command(0x10 + cursor[1] * 7 // 16)  # set column address MSB. 7 pixels per character
+        self.WriteByte_command(0x00 + cursor[1] * 7 % 16)   # set column address LSB. 7 pixels per character
         for num in range(len(str)):
             if str[num] == '0':
                 self.WriteFont(0)

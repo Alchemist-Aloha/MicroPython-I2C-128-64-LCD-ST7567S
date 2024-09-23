@@ -1,7 +1,7 @@
 import machine
 import time
-import lcd128_32_fonts
-from lcd128_32 import lcd128_32
+import lcd128_64_fonts
+from lcd128_64 import lcd128_64
 
 # i2c config
 clock_pin = 27
@@ -24,10 +24,9 @@ def scan_for_devices():
 
 if use_i2c:
     scan_for_devices()
-    lcd = lcd128_32(data_pin, clock_pin, bus, i2c_addr)
+    lcd = lcd128_64(data_pin, clock_pin, bus, i2c_addr)
 
-
-lcd.Clear()
+# lcd.Clear()
 
 lcd.Cursor(0, 4)
 lcd.Display("KEYESTUDIO")
@@ -36,6 +35,14 @@ lcd.Display("ABCDEFGHIJKLMNOPQR")
 lcd.Cursor(2, 0)
 lcd.Display("123456789+-*/<>=$@")
 lcd.Cursor(3, 0)
+lcd.Display("%^&(){}:;'|?,.~\\[]")
+lcd.Cursor(4, 4)
+lcd.Display("KEYESTUDIO")
+lcd.Cursor(5, 0)
+lcd.Display("ABCDEFGHIJKLMNOPQR")
+lcd.Cursor(6, 0)
+lcd.Display("123456789+-*/<>=$@")
+lcd.Cursor(7, 0)
 lcd.Display("%^&(){}:;'|?,.~\\[]")
 """
 while True:
