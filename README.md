@@ -7,7 +7,7 @@ GP27  ->  SCL
 
 GP26  ->  SDA
 
-3V3OUT  ->  GND
+3V3OUT  ->  VCC
 
 GND  ->  GND
 
