@@ -1,6 +1,7 @@
 """
 Micropython (Raspberry Pi Pico)
 2022/1/12     DENGFEI
+2024/9/23     Alchemist Aloha
 lcd.Display() Only 94 limited characters in fonts can be displayed
 """
 
