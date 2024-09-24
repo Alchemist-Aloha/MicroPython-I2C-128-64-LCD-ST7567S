@@ -1,13 +1,14 @@
 Micropython code for GM12864-59N I2C screen module with ST7567S chip. Tested with Raspberry Pi Pico.
 
-Pi Pico | Screen
 
-GP27 -> SCL
+Pi Pico  |  ST7567S
 
-GP26 -> SDA
+GP27  ->  SCL
 
-3V3OUT -> GND
+GP26  ->  SDA
 
-GND -> GND
+3V3  ->  VCC
+
+GND  ->  GND
 
 Modified from Keyestudio 128x32 screen code.
