@@ -1,6 +1,4 @@
-import machine
-import time
-import lcd128_64_fonts
+from machine import Pin, I2C
 from lcd128_64 import lcd128_64
 
 # i2c config
@@ -12,8 +10,8 @@ use_i2c = True
 
 
 def scan_for_devices():
-    i2c = machine.I2C(bus, sda=machine.Pin(
-        data_pin), scl=machine.Pin(clock_pin))
+    i2c = I2C(bus, sda=Pin(
+        data_pin), scl=Pin(clock_pin))
     devices = i2c.scan()
     if devices:
         for d in devices:
