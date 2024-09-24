@@ -4,63 +4,66 @@ Micropython (Raspberry Pi Pico)
 2024/9/23     Alchemist Aloha
 lcd.Display() Only 94 limited characters in fonts can be displayed
 """
-
-import machine
 import time
+from machine import I2C, Pin
 import lcd128_64_fonts
 cursor = [0, 0]
 class lcd128_64:
+    '''LCD12864 display ST7567S controller'''
     
     def __init__(self,dt,clk,bus,addr):
         self.addr = addr
-        self.i2c = machine.I2C(bus,sda=machine.Pin(dt),scl=machine.Pin(clk))
-        self.Init()
+        self.i2c = I2C(bus,sda=Pin(dt),scl=Pin(clk))
+        self.init()
         
-    def WriteByte_command(self, cmd):
+    def writebyte_command(self, cmd):
+        '''Write a command to the display.'''
         self.reg_write(0x00, cmd)
     
-    def WriteByte_dat(self, dat):
+    def writebyte_dat(self, dat):
+        '''Write data to the display.'''
         self.reg_write(0x40, dat)
     
     def reg_write(self, reg, data):
+        '''Write data to the register.'''
         msg = bytearray()
         msg.append(data)
         self.i2c.writeto_mem(self.addr, reg, msg)
     
-    def Init(self):
-        #self.i2c.start()
+    def init(self):
+        '''Initialize the display.'''
         time.sleep(0.01)
-        self.WriteByte_command(0xe2)    # system reset
+        self.writebyte_command(0xe2)    # system reset
         time.sleep(0.01)
-        self.WriteByte_command(0xa2)    # 1/9 bias
-        self.WriteByte_command(0xa0)    # Set SEG direction, normal
-        self.WriteByte_command(0xc8)    # Set COM direction, normal
-        self.WriteByte_command(0x25)    # Select internal VDD regulator
-        self.WriteByte_command(0x81)    # Set electronic volume (EV) level
-        self.WriteByte_command(0x20)    # Set electronic volume (EV) level
-        self.WriteByte_command(0x2c)    # Booster on
-        self.WriteByte_command(0x2e)    # regulator on
-        self.WriteByte_command(0x2f)    # Follower on
-        self.Clear()
-        # self.WriteByte_command(0xff)    # 11111111
-        # self.WriteByte_command(0x72)    # 01110010
-        # self.WriteByte_command(0xfe)    # 11111110
-        # self.WriteByte_command(0xd6)    # 11010110 orig=d6
-        # self.WriteByte_command(0x90)    # 10010000
-        # self.WriteByte_command(0x9d)    # 10011101
-        self.WriteByte_command(0xaf)    # Display on
-        self.WriteByte_command(0x40)    # Set start line
+        self.writebyte_command(0xa2)    # 1/9 bias
+        self.writebyte_command(0xa0)    # Set SEG direction, normal
+        self.writebyte_command(0xc8)    # Set COM direction, normal
+        self.writebyte_command(0x25)    # Select internal VDD regulator
+        self.writebyte_command(0x81)    # Set electronic volume (EV) level
+        self.writebyte_command(0x20)    # Set electronic volume (EV) level
+        self.writebyte_command(0x2c)    # Booster on
+        self.writebyte_command(0x2e)    # regulator on
+        self.writebyte_command(0x2f)    # Follower on
+        self.clear()
+        # self.writebyte_command(0xff)    # 11111111
+        # self.writebyte_command(0x72)    # 01110010
+        # self.writebyte_command(0xfe)    # 11111110
+        # self.writebyte_command(0xd6)    # 11010110 orig=d6
+        # self.writebyte_command(0x90)    # 10010000
+        # self.writebyte_command(0x9d)    # 10011101
+        self.writebyte_command(0xaf)    # Display on
+        self.writebyte_command(0x40)    # Set start line
         
-    def Clear(self):
+    def clear(self):
         '''Clear the screen'''
         for i in range(8):
-            self.WriteByte_command(0xb0 + i)    # set page address
-            self.WriteByte_command(0x10)    # set column address MSB
-            self.WriteByte_command(0x00)    # set column address LSB
+            self.writebyte_command(0xb0 + i)    # set page address
+            self.writebyte_command(0x10)    # set column address MSB
+            self.writebyte_command(0x00)    # set column address LSB
             for j in range(128):
-                self.WriteByte_dat(0x00)    # clear all columns
+                self.writebyte_dat(0x00)    # clear all columns
     
-    def Cursor(self, y, x):
+    def cursor(self, y, x):
         '''Set the cursor position. y: 0-7, x: 0-17'''
         if x > 17:
             x = 17
@@ -69,202 +72,40 @@ class lcd128_64:
         cursor[0] = y
         cursor[1] = x
         
-    def WriteFont(self, num):
+    def write_font(self, num):
+        '''Write the corresponding font for each character in the text to the display.'''
         for item in lcd128_64_fonts.textFont[num]:
-            self.WriteByte_dat(item)
+            self.writebyte_dat(item)
     
-    def Display(self, str):
-        self.WriteByte_command(0xb0 + cursor[0])    # set page address
-        self.WriteByte_command(0x10 + cursor[1] * 7 // 16)  # set column address MSB. 7 pixels per character
-        self.WriteByte_command(0x00 + cursor[1] * 7 % 16)   # set column address LSB. 7 pixels per character
-        for num in range(len(str)):
-            if str[num] == '0':
-                self.WriteFont(0)
-            elif str[num] == '1':
-                self.WriteFont(1)
-            elif str[num] == '2':
-                self.WriteFont(2)
-            elif str[num] == '3':
-                self.WriteFont(3)
-            elif str[num] == '4':
-                self.WriteFont(4)
-            elif str[num] == '5':
-                self.WriteFont(5)
-            elif str[num] == '6':
-                self.WriteFont(6)
-            elif str[num] == '7':
-                self.WriteFont(7)
-            elif str[num] == '8':
-                self.WriteFont(8)
-            elif str[num] == '9':
-                self.WriteFont(9)
-            elif str[num] == 'a':
-                self.WriteFont(10)
-            elif str[num] == 'b':
-                self.WriteFont(11)
-            elif str[num] == 'c':
-                self.WriteFont(12)
-            elif str[num] == 'd':
-                self.WriteFont(13)
-            elif str[num] == 'e':
-                self.WriteFont(14)
-            elif str[num] == 'f':
-                self.WriteFont(15)
-            elif str[num] == 'g':
-                self.WriteFont(16)
-            elif str[num] == 'h':
-                self.WriteFont(17)
-            elif str[num] == 'i':
-                self.WriteFont(18)
-            elif str[num] == 'j':
-                self.WriteFont(19)
-            elif str[num] == 'k':
-                self.WriteFont(20)
-            elif str[num] == 'l':
-                self.WriteFont(21)
-            elif str[num] == 'm':
-                self.WriteFont(22)
-            elif str[num] == 'n':
-                self.WriteFont(23)
-            elif str[num] == 'o':
-                self.WriteFont(24)
-            elif str[num] == 'p':
-                self.WriteFont(25)
-            elif str[num] == 'q':
-                self.WriteFont(26)
-            elif str[num] == 'r':
-                self.WriteFont(27)
-            elif str[num] == 's':
-                self.WriteFont(28)
-            elif str[num] == 't':
-                self.WriteFont(29)
-            elif str[num] == 'u':
-                self.WriteFont(30)
-            elif str[num] == 'v':
-                self.WriteFont(31)
-            elif str[num] == 'w':
-                self.WriteFont(32)
-            elif str[num] == 'x':
-                self.WriteFont(33)
-            elif str[num] == 'y':
-                self.WriteFont(34)
-            elif str[num] == 'z':
-                self.WriteFont(35)
-            elif str[num] == 'A':
-                self.WriteFont(36)
-            elif str[num] == 'B':
-                self.WriteFont(37)
-            elif str[num] == 'C':
-                self.WriteFont(38)
-            elif str[num] == 'D':
-                self.WriteFont(39)
-            elif str[num] == 'E':
-                self.WriteFont(40)
-            elif str[num] == 'F':
-                self.WriteFont(41)
-            elif str[num] == 'G':
-                self.WriteFont(42)
-            elif str[num] == 'H':
-                self.WriteFont(43)
-            elif str[num] == 'I':
-                self.WriteFont(44)
-            elif str[num] == 'J':
-                self.WriteFont(45)
-            elif str[num] == 'K':
-                self.WriteFont(46)
-            elif str[num] == 'L':
-                self.WriteFont(47)
-            elif str[num] == 'M':
-                self.WriteFont(48)
-            elif str[num] == 'N':
-                self.WriteFont(49)
-            elif str[num] == 'O':
-                self.WriteFont(50)
-            elif str[num] == 'P':
-                self.WriteFont(51)
-            elif str[num] == 'Q':
-                self.WriteFont(52)
-            elif str[num] == 'R':
-                self.WriteFont(53)
-            elif str[num] == 'S':
-                self.WriteFont(54)
-            elif str[num] == 'T':
-                self.WriteFont(55)
-            elif str[num] == 'U':
-                self.WriteFont(56)
-            elif str[num] == 'V':
-                self.WriteFont(57)
-            elif str[num] == 'W':
-                self.WriteFont(58)
-            elif str[num] == 'X':
-                self.WriteFont(59)
-            elif str[num] == 'Y':
-                self.WriteFont(60)
-            elif str[num] == 'Z':
-                self.WriteFont(61)
-            elif str[num] == '!':
-                self.WriteFont(62)
-            elif str[num] == '"':
-                self.WriteFont(63)
-            elif str[num] == '#':
-                self.WriteFont(64)
-            elif str[num] == '$':
-                self.WriteFont(65)
-            elif str[num] == '%':
-                self.WriteFont(66)
-            elif str[num] == '&':
-                self.WriteFont(67)
-            elif str[num] == '\'':
-                self.WriteFont(68)
-            elif str[num] == '(':
-                self.WriteFont(69)
-            elif str[num] == ')':
-                self.WriteFont(70)
-            elif str[num] == '*':
-                self.WriteFont(71)
-            elif str[num] == '+':
-                self.WriteFont(72)
-            elif str[num] == ',':
-                self.WriteFont(73)
-            elif str[num] == '-':
-                self.WriteFont(74)
-            elif str[num] == '/':
-                self.WriteFont(75)
-            elif str[num] == ':':
-                self.WriteFont(76)
-            elif str[num] == ';':
-                self.WriteFont(77)
-            elif str[num] == '<':
-                self.WriteFont(78)
-            elif str[num] == '=':
-                self.WriteFont(79)
-            elif str[num] == '>':
-                self.WriteFont(80)
-            elif str[num] == '?':
-                self.WriteFont(81)
-            elif str[num] == '@':
-                self.WriteFont(82)
-            elif str[num] == '{':
-                self.WriteFont(83)
-            elif str[num] == '|':
-                self.WriteFont(84)
-            elif str[num] == '}':
-                self.WriteFont(85)
-            elif str[num] == '~':
-                self.WriteFont(86)
-            elif str[num] == ' ':
-                self.WriteFont(87)
-            elif str[num] == '.':
-                self.WriteFont(88)
-            elif str[num] == '^':
-                self.WriteFont(89)
-            elif str[num] == '_':
-                self.WriteFont(90)
-            elif str[num] == '`':
-                self.WriteFont(91)
-            elif str[num] == '[':
-                self.WriteFont(92)
-            elif str[num] == '\\':
-                self.WriteFont(93)
-            elif str[num] == ']':
-                self.WriteFont(94)
+    def find_and_write_font(self, text):
+        """
+        Write the corresponding font for each character in the text to the display.
+        
+        Args:
+            text (str): The string to be displayed.
+        """
+        font_map = {
+            '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+            'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15, 'g': 16, 'h': 17, 'i': 18, 'j': 19,
+            'k': 20, 'l': 21, 'm': 22, 'n': 23, 'o': 24, 'p': 25, 'q': 26, 'r': 27, 's': 28, 't': 29,
+            'u': 30, 'v': 31, 'w': 32, 'x': 33, 'y': 34, 'z': 35, 'A': 36, 'B': 37, 'C': 38, 'D': 39,
+            'E': 40, 'F': 41, 'G': 42, 'H': 43, 'I': 44, 'J': 45, 'K': 46, 'L': 47, 'M': 48, 'N': 49,
+            'O': 50, 'P': 51, 'Q': 52, 'R': 53, 'S': 54, 'T': 55, 'U': 56, 'V': 57, 'W': 58, 'X': 59,
+            'Y': 60, 'Z': 61, '!': 62, '"': 63, '#': 64, '$': 65, '%': 66, '&': 67, '\'': 68, '(': 69,
+            ')': 70, '*': 71, '+': 72, ',': 73, '-': 74, '/': 75, ':': 76, ';': 77, '<': 78, '=': 79,
+            '>': 80, '?': 81, '@': 82, '{': 83, '|': 84, '}': 85, '~': 86, ' ': 87, '.': 88, '^': 89,
+            '_': 90, '`': 91, '[': 92, '\\': 93, ']': 94
+        }
+        for char in text:
+            if char in font_map:
+                self.write_font(font_map[char])
+                
+    def display(self, text):
+        '''Display the text on the screen.'''
+        self.writebyte_command(0xb0 + cursor[0])    # set page address
+        self.writebyte_command(0x10 + cursor[1] * 7 // 16)  # set column address MSB. 7 pixels per character
+        self.writebyte_command(0x00 + cursor[1] * 7 % 16)   # set column address LSB. 7 pixels per character
+        try:
+            self.find_and_write_font(text)
+        except:
+            print(f"Error: {e}")
